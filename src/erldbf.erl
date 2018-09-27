@@ -171,6 +171,9 @@ parse_field_desc(<<FName:11/binary, FType:5/binary, FLength/integer, _Rest/binar
   #field_descriptor{field_name = skip_zero(FName), field_type = detect_field_type(FType), field_length = FLength}.
 
 -spec parse_date(binary()) -> erlang:date().
+parse_date(<<>>) ->
+  {1900, 1, 1};
+
 parse_date(<<Year:4/binary, Month:2/binary, Day:2/binary>>) ->
   {binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}.
 
