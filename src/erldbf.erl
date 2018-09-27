@@ -66,6 +66,7 @@ decode_header(
     N:4/little-unit:8,   %% 8 bytes
     FieldsStripe:2/little-unit:8, RecordStripe:2/little-unit:8,   %% 4 bytes
     _Z:20/unit:8, Rest/binary>>) ->
+	io:format("N ~p~n", [N]),
     {FieldDescriptor, Rows} = split_binary(Rest, FieldsStripe - 33),
     Fields = field_descriptor(FieldDescriptor, []),
     {ok, #file_struct{
@@ -76,6 +77,7 @@ decode_header(
         fields = lists:reverse(Fields),
         fields_len = length(Fields),
         buffer = skip_rows(Rows)}
+        %buffer = Rows}
     }.
 
 
@@ -95,14 +97,14 @@ parse_rows(#file_struct{record_stripe = RS, fields = Fields, buffer = Buffer, ro
         {Row, <<>>} ->
           parse_rows(S#file_struct{buffer = <<>>, rows = [parse_row(Fields, Row)|Acc]});
         %% Mark as Deleted
-        {<<$*, _DeletedRow/binary>>, <<>>} ->
-          parse_rows(S#file_struct{buffer = <<>>, rows = Acc});
+        %{<<$*, _DeletedRow/binary>>, <<>>} ->
+        %  parse_rows(S#file_struct{buffer = <<>>, rows = Acc});
         %% Mark as Deleted
-        {<<$*, _DeletedRow/binary>>, ?ENDMARK} ->
-          parse_rows(S#file_struct{buffer = <<>>, rows = Acc});
+        %{<<$*, _DeletedRow/binary>>, ?ENDMARK} ->
+        %  parse_rows(S#file_struct{buffer = <<>>, rows = Acc});
         %% Mark as Deleted
-        {<<$*, _DeletedRow/binary>>, Rest} ->
-          parse_rows(S#file_struct{buffer = Rest, rows = Acc});
+        %{<<$*, _DeletedRow/binary>>, Rest} ->
+        %  parse_rows(S#file_struct{buffer = Rest, rows = Acc});
         {Row, ?ENDMARK} ->
           parse_rows(S#file_struct{buffer = <<>>, rows = [parse_row(Fields, Row)|Acc]});
         {Row, Rest} ->
@@ -174,8 +176,15 @@ parse_field_desc(<<FName:11/binary, FType:5/binary, FLength/integer, _Rest/binar
 parse_date(<<>>) ->
   {1900, 1, 1};
 
+parse_date(<<"    ">>) ->
+  {1900, 1, 1};
+
+parse_date(<<"        ">>) ->
+  {1900, 1, 1};
+
 parse_date(<<Year:4/binary, Month:2/binary, Day:2/binary>>) ->
   {binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}.
+
 
 skip_pad(left_once, Data) ->
   lists:last(binary:split(Data, <<32>>));
