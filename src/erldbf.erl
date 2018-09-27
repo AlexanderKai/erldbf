@@ -66,7 +66,6 @@ decode_header(
     N:4/little-unit:8,   %% 8 bytes
     FieldsStripe:2/little-unit:8, RecordStripe:2/little-unit:8,   %% 4 bytes
     _Z:20/unit:8, Rest/binary>>) ->
-	io:format("N ~p~n", [N]),
     {FieldDescriptor, Rows} = split_binary(Rest, FieldsStripe - 33),
     Fields = field_descriptor(FieldDescriptor, []),
     {ok, #file_struct{
@@ -77,7 +76,6 @@ decode_header(
         fields = lists:reverse(Fields),
         fields_len = length(Fields),
         buffer = skip_rows(Rows)}
-        %buffer = Rows}
     }.
 
 
